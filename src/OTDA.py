@@ -1,4 +1,5 @@
 import time
+import numpy as np
 from src.utils import *
 
 from numpy.linalg import norm
@@ -127,7 +128,7 @@ class OTDA(object):
 
         return H_init
 
-    def nmf_solver(self, A, S, H_init, alpha):
+    def nmf_solver(self, A, S, H_init, alpha, solver='CG'):
 
         HT, _, _ = nls_subproblem(A, self.W1, H_init.T, 1e-3, 1000)
         H = HT.T
@@ -136,10 +137,14 @@ class OTDA(object):
         self.V2 = self.V2 + np.dot(self.W1.T, self.W1)
         gradW2 = self.U2 - np.dot(self.W2, self.V2)
 
-        V_inv = pinv(self.V2)
-        self.W2 += np.dot(gradW2, V_inv)
-        # Q = CG_solver(self.V1.T, gradW2)
-        # self.W1 += Q.T
+
+        if solver == 'CG':
+            Q = CG_solver(self.V2.T, gradW2)
+            self.W2 += Q.T
+        else:
+            V_inv = pinv(self.V2)
+            self.W2 += np.dot(gradW2, V_inv)
+    
         self.W2 = pos(self.W2)
 
         AS = np.r_[A.T, np.sqrt(self.alpha) * S.T]
@@ -148,10 +153,13 @@ class OTDA(object):
         self.V1 = self.V1 + np.dot(HW2.T, HW2)
         gradW1 = self.U1 - np.dot(self.W1, self.V1)
 
-        V_inv = pinv(self.V1)
-        self.W1 += np.dot(gradW1, V_inv)
-        # Q = CG_solver(self.V1.T, gradW1)
-        # self.W1 += Q.T
+        if solver == 'CG':
+            Q = CG_solver(self.V1.T, gradW1)
+            self.W1 += Q.T
+        else:
+            V_inv = pinv(self.V1)
+            self.W1 += np.dot(gradW1, V_inv)
+
         self.W1 = pos(self.W1)
 
         return H
