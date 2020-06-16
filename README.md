@@ -12,3 +12,11 @@ Data sets links used for experimentation:<br>
   <li>Snippets: http://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2 </li>
   <li>Optum: Internal data</li>
 </ul>
+
+
+Online SeaNMF code is modified from https://github.com/tshi04/SeaNMF
+
+LDA Baselines used:
+1. Online LDA : scikit learn
+2. DTM : Gensim library
+3. Adaptive LDA: https://github.com/Wind-Ward/OnLine-LDA

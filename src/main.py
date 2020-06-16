@@ -14,7 +14,7 @@ from sklearn.metrics import silhouette_score, davies_bouldin_score
 
 dataFolder = Path('../data')
 corpus = 'data.csv'
-batch_size = 500
+batch_size = 2000
 num_topics = 8
 
 
@@ -49,6 +49,15 @@ def get_docterm_matrix(texts, vocab, method='tfidf'):
         docterm_tf = tfvectorizer.fit_transform(texts)
         return docterm_tf
 
+
+def detect_emergingtopics(topic_term_hist, p):
+    emerging_topics = []
+    for i in range(0, len(topic_term_hist)-1):
+        topic_diff = np.linalg.norm(topic_term_hist[i+1]-topic_term_hist[i], axis=1)
+        idx = abs(topic_diff -np.percentile(topic_diff, p, interpolation='higher')).argmin()
+        emerging_topics.append(idx)
+        
+    return emerging_topics
 
 def otda(X, model, prevS=None):
     pseudo_count = 0.01
@@ -95,6 +104,7 @@ def main():
         max_err=0.0001,
         fix_seed=True)
 
+    topic_term_hist= []
     for batch_texts in generate_batches(texts, batch_size):
         docterm_m = get_docterm_matrix(batch_texts, vocab, method='tf')
         print(docterm_m.shape)
@@ -106,11 +116,15 @@ def main():
             doctopic = H
         else:
             doctopic = np.vstack((doctopic, H))
+            
+        topic_term_hist.append(W)
 
     cluster = np.argmax(doctopic, axis=1)
     nmi = NMI(data_df["Tag1"], cluster, average_method='arithmetic')
     print('NMI', nmi)
 
+    emerging_topics = detect_emergingtopics(topic_term_hist, 90)
+    print('emerging', emerging_topics)
 
 
 if __name__== "__main__":
